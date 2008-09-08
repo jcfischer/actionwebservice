@@ -38,6 +38,25 @@ task :build_database do
   %x( mysql -uroot actionwebservice_unittest < #{File.join(SCHEMA_PATH, 'mysql.sql')} )
 end
 
+desc 'Print file list for gemspec file.'
+task :list_files do
+  s_files = [ "Rakefile", "setup.rb", "README", "TODO", "CHANGELOG", "MIT-LICENSE" ]
+  s_files = s_files + Dir.glob( "examples/**/*" ).delete_if { |item| item.match( /\.(svn|git)/ ) }
+  s_files = s_files + Dir.glob( "lib/**/*" ).delete_if { |item| item.match( /\.(svn|git)/ ) }
+  s_files = s_files + Dir.glob( "test/**/*" ).delete_if { |item| item.match( /\.(svn|git)/ ) }
+  s_files = s_files + Dir.glob( "generators/**/*" ).delete_if { |item| item.match( /\.(svn|git)/ ) }
+  puts "#{s_files.inspect}"
+end
+
+desc 'Checks gemspec for methods disallowed by GitHub\'s $SAFE=3 build environment.'
+task :check_for_github do
+  require 'rubygems/specification'
+  data = File.read('actionwebservice.gemspec')
+  spec = nil
+  Thread.new { spec = eval("$SAFE = 3\n#{data}") }.join
+  puts "Success! Gem should build at GitHub." if spec.class == Gem::Specification
+end
+
 
 # Generate the RDoc documentation
 Rake::RDocTask.new { |rdoc|
